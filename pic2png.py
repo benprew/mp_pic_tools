@@ -93,11 +93,11 @@ def parse_pic_v3(
 
     # make png from palette and pic data
     logging.info(f"pic: {fn}, def_pal: {def_pal}, w: {width}, h: {height}")
-    print(f"pic {pic[0:10].hex()}")
+    # print(f"pic {pic[0:10].hex()}")
 
     i = 0
     while i < len(pal):
-        print(f"pal {i // 3}: {pal[i:i+3].hex()}")
+        # print(f"pal {i // 3}: {pal[i:i+3].hex()}")
         i += 3
 
     image = Image.frombytes("P", (width, height), pic)
@@ -140,7 +140,10 @@ def parse_image(f, length: int) -> tuple[bytes, int, int]:
     # unpack bits
     # data = unpack_data(data)
     # logging.info(f"len after UNPACK {len(data)}, exp {header.width * header.height}")
-    # data += [0] * (header.width * header.height - len(data))
+
+    # Pad image data to width*height
+    # This happens in mtg Cstline1.pic, Dungeon.pic, and Magic.pic
+    data += [255] * (header.width * header.height - len(data))
 
     return bytes(data), header.width, header.height
 
@@ -194,8 +197,6 @@ def parse_text_palette(pal_file="TodPal.tr") -> bytes:
             pal_num = int(temp[0])
             rgb = temp[2:5]
             pal[pal_num] = [int(x) for x in rgb]
-
-    print(pal)
 
     # Convert the list of lists to a bytes object
     byte_data = b"".join(struct.pack("<BBB", *pal[i]) for i in range(256))
