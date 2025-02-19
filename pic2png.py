@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from collections import namedtuple
 from io import BufferedReader
 from typing import Optional
 import argparse
@@ -13,10 +12,7 @@ from PIL.Image import Image as PILImage
 
 import rle
 import lzw
-
-PicV3BlockHeader = namedtuple("PicV3BlockHeader", ["block_id", "length"])
-PicV3Palette = namedtuple("PicV3Palette", ["first", "last"])
-PicV3Image = namedtuple("PicV3Image", ["width", "height", "max_bits"])
+from pic_headers import PicV3BlockHeader, PicV3Image, PicV3Palette
 
 
 def main():
@@ -57,11 +53,6 @@ def parse_pic_v3(
     f: BufferedReader, fn: str, palette: Optional[bytes] = None
 ) -> PILImage:
     """Convert .pic file to .png"""
-    # typedef struct {  // PicV3 General Block Header
-    #     char block_id[2];  // block tag
-    #     uint16_t length;   // length of the block
-    #     uint8_t data[];    // remaining block data
-    # } mp_picV3_block_t;
 
     pal = palette if palette is not None else parse_text_palette()
     def_pal = True
@@ -118,16 +109,13 @@ def parse_pic_v3(
 # LZW code width) The most common identifier values we have seen are:
 # 9-11
 def parse_image(f, length: int) -> tuple[bytes, int, int]:
-    # typedef struct { // PicV3 Image Block
-    #     uint16_t width;    // image width in pixels
-    #     uint16_t height;   // image height in pixels
-    #     uint8_t max_bits;  // maximum code width for LZW data
-    #     uint8_t lz_data[]; // RLE+LZW compressed stream
-    # } mp_picV3_image_t;
-
     header = PicV3Image._make(struct.unpack("<HHB", f.read(5)))
     logging.debug(f"Image header: {header}")
-    data = f.read(length - 5)
+    # data = f.read(length - 5)
+    # sometimes length is an overflowed value (see 0028.pic)
+    # in all the mtg picv3 files, the last block is the image data
+    # so we read until the end of the file
+    data = f.read(-1)
 
     # lzw decompress
     data = lzw.decompress(data, abs(header.max_bits))
@@ -157,12 +145,6 @@ def unpack_data(data: list) -> list:
 
 
 def parse_palette(f: BufferedReader) -> bytes:
-    # typedef struct { // PicV3 Palette Block
-    #     uint8_t first;          // index of first palette entry
-    #     uint8_t last;           // index of last palette entry
-    #     pal_t palette_data[];   // last-first+1 RGB entries
-    # } mp_picV3_palette_t;
-
     pal_header = PicV3Palette._make(struct.unpack("<BB", f.read(2)))
 
     logging.info(pal_header)
