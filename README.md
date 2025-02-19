@@ -14,3 +14,9 @@ Tools for converting to/from .PIC files
 1. Download this repo `git clone ...`
 2. Install pillow `pip3 install --user pillow`
 3. Run `pic2png.py -h`
+
+## Acknowledgments
+
+- Canadian Avenger's excellent [article on PIC file format](https://canadianavenger.io/2024/09/17/pic-as-we-know-it/#pic-aliases)
+* Joel "Quadko" McIntyre's [PicFileFormat.txt](https://www.joelmcintyre.com/PicFileFormat.txt)
+* Ciroth Ungol's [PicViewer Tools](https://www.slightlymagic.net/forum/viewtopic.php?f=25&t=7509)
