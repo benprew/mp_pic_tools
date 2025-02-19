@@ -13,7 +13,7 @@ Tools for converting to/from .PIC files
 
 1. Download this repo `git clone ...`
 2. Install pillow `pip3 install --user pillow`
-3. Run `pic2png.py -h`
+3. Run `pic2png.py -h` or `png2pic.py`
 
 ## Acknowledgments
 
