@@ -21,3 +21,25 @@ PicV3Palette = namedtuple("PicV3Palette", ["first", "last"])
 #     uint8_t lz_data[]; // RLE+LZW compressed stream
 # } mp_picV3_image_t;
 PicV3Image = namedtuple("PicV3Image", ["width", "height", "max_bits"])
+
+# SPR header:
+# uint32_t length
+# uint16_t width
+# uint16_t height
+# uint16_t unknown
+# uint16_t unknown2
+# uint16_t num_empty_lines_above
+# uint16_t transparent_start
+SprHeader = namedtuple(
+    "SprHeader",
+    [
+        "length",
+        "width",
+        "height",
+        "unknown",
+        "unknown2",
+        "num_empty_lines_above",
+        "transparent_start",
+    ],
+)
+SprFormat = "<IHHHHHH"

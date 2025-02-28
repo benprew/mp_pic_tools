@@ -13,6 +13,7 @@ from PIL.Image import Image as PILImage
 import rle
 import lzw
 from pic_headers import PicV3BlockHeader, PicV3Image, PicV3Palette
+from shared import parse_text_palette
 
 
 def main():
@@ -93,6 +94,7 @@ def parse_pic_v3(
 
     image = Image.frombytes("P", (width, height), pic)
     image.putpalette(pal)
+    image.info["transparency"] = 255
 
     return image
 
@@ -164,24 +166,6 @@ def parse_palette(f: BufferedReader) -> bytes:
     format_string = "BBB"
     # Create a bytes object by packing each tuple
     byte_data = b"".join(struct.pack(format_string, *t) for t in palette)
-    return byte_data
-
-
-def parse_text_palette(pal_file="TodPal.tr") -> bytes:
-    """Parse .tr palette files into bytes"""
-    pal = [[255, 255, 255]] * 256
-
-    # Open text Palette and fill array
-    # format "pal# - val1 val2 val3"
-    with open(pal_file, "r") as read_pal:
-        for line in read_pal:
-            temp = line.strip().split()
-            pal_num = int(temp[0])
-            rgb = temp[2:5]
-            pal[pal_num] = [int(x) for x in rgb]
-
-    # Convert the list of lists to a bytes object
-    byte_data = b"".join(struct.pack("<BBB", *pal[i]) for i in range(256))
     return byte_data
 
 
