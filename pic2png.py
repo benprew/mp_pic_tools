@@ -13,7 +13,7 @@ from PIL.Image import Image as PILImage
 import rle
 import lzw
 from pic_headers import PicV3BlockHeader, PicV3Image, PicV3Palette
-from shared import parse_text_palette
+from shared import tr2pal
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
     filename = args.file
     pal = None
     if args.palette:
-        pal = parse_text_palette(args.palette)
+        pal = tr2pal(args.palette)
 
     # open file as binary
     with open(filename, "rb") as f:
@@ -55,7 +55,7 @@ def parse_pic_v3(
 ) -> PILImage:
     """Convert .pic file to .png"""
 
-    pal = palette if palette is not None else parse_text_palette()
+    pal = palette if palette is not None else tr2pal()
     def_pal = True
 
     while f:
