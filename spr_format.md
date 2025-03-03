@@ -1,4 +1,4 @@
-The SPR file format parsed by the provided function is a palette-based image format designed to store multiple images with transparency support. Here's a detailed breakdown of the structure:
+The SPR file format is a palette-based image format designed to store multiple images with transparency support. Here's a detailed breakdown of the structure:
 
 ### Overall Structure
 - **Multi-image Container**: The file contains multiple images, each prefixed with a size field. The end of the image list is marked by a size value of `0xFFFFFFFF`.
