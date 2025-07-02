@@ -23,6 +23,18 @@ You can install Pillow using pip:
 pip3 install --user pillow
 ```
 
+## Replacing a .pic image in Shandalar
+
+If you want to replace an existing .pic image with one of your choice, here's the steps.
+
+In this example, we have city.jpeg a .jpeg file and we want to replace the default screen that's shown when you walk into a city (City.pic). Todpal.tr is the palette file, in the Shandalar directory.
+
+    jpg2png.py city.jpeg
+    png2pic.py city.png -p Todpal.tr 
+    mv city.png.pic City.pic
+
+
+
 ## Scripts Overview
 
 1. **png2pic.py**: Converts PNG files to PICv3 files.
