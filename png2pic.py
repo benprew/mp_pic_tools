@@ -9,6 +9,7 @@ import os
 from pic_headers import PicV3BlockHeader, PicV3Image, PicV3Palette
 import rle
 import lzw
+from shared import tr2pal
 
 
 def main():
@@ -18,7 +19,7 @@ def main():
         "-v", "--verbose", action="store_true", help="Enable verbose mode."
     )
     parser.add_argument(
-        "-p", "--palette", help="The palette file to use.", default=None
+        "-p", "--palette", help="The palette file to match the image to.", required=True
     )
     args = parser.parse_args()
 
@@ -27,18 +28,38 @@ def main():
     else:
         logging.basicConfig(level=logging.WARNING)
 
-    width, height, bytes, pal = parse_image(args.file)
-    pic = make_pic(width, height, bytes, pal)
+    img, width, height, bytes_orig, pal = parse_image(args.file)
+    quantized_img = convert_image_to_palette(img, args.palette)
+    bytes_quantized = quantized_img.tobytes()
+    pic = make_pic(width, height, bytes_quantized)
     out = f"{os.path.basename(args.file)}.pic"
     with open(out, "wb") as f:
         print(f"writing pic to {out}")
         f.write(pic)
 
 
-def parse_image(filename: str) -> tuple[int, int, bytes, list[tuple]]:
+def convert_image_to_palette(
+    image: Image.Image, palette_filename: bytes
+) -> Image.Image:
+    """Convert an image to a palette using a specified palette file."""
+    palette = tr2pal(palette_filename)
+
+    palette_image = Image.new("P", (16, 16))
+    palette_image.putpalette(palette)
+
+    # Convert the image to RGB mode before quantizing
+    rgb_image = image.convert("RGB")
+
+    # Convert using fixed palette
+    return rgb_image.quantize(palette=palette_image, dither=Image.FLOYDSTEINBERG)
+
+
+def parse_image(filename: str) -> tuple[Image.Image, int, int, bytes, list[tuple]]:
+    """Parse an image file and return image data and metadata."""
     img = Image.open(filename)
     width, height = img.size
-    bytes = img.tobytes()
+    bytes_data = img.tobytes()
+    print("len bytes:", len(bytes_data))
     pal = img.palette
     if pal is None:
         raise ValueError("Image does not have a palette")
@@ -46,23 +67,14 @@ def parse_image(filename: str) -> tuple[int, int, bytes, list[tuple]]:
     rgb_palette = [
         (pal_lst[i], pal_lst[i + 1], pal_lst[i + 2]) for i in range(0, len(pal_lst), 3)
     ]
-    return width, height, bytes, rgb_palette
+    return img, width, height, bytes_data, rgb_palette
 
 
-def make_pic(width: int, height: int, bytes: bytes, pal: list[tuple]) -> bytearray:
+def make_pic(width: int, height: int, bytes: bytes) -> bytearray:
     """Write a PICv3 file"""
 
     pic = bytearray()
-    pal_block = bytearray()
     img_block = bytearray()
-
-    # write palette
-    pal_header = PicV3Palette(0, len(pal) - 1)
-    pal_block.extend(struct.pack("<BB", *pal_header))
-    pal_block.extend(b"".join([struct.pack("<BBB", *p) for p in pal]))
-    pic_header = PicV3BlockHeader(b"M0", len(pal_block))
-    pic.extend(struct.pack("<2sH", *pic_header))
-    pic.extend(pal_block)
 
     # write image
     mode = 11
@@ -77,7 +89,7 @@ def make_pic(width: int, height: int, bytes: bytes, pal: list[tuple]) -> bytearr
     img_block.extend(struct.pack("<" + ("B" * len(img_compressed)), *img_compressed))
     # print(len(img_compressed))
     # Some files (0028.pic) are larger than uint8, so we write the overflowed value
-    pic_header = PicV3BlockHeader(b"X1", len(img_block) % 2**16)
+    pic_header = PicV3BlockHeader(b"X0", len(img_block) % 2**16)
     pic.extend(struct.pack("<2sH", *pic_header))
     pic.extend(img_block)
 

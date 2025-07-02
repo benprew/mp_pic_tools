@@ -55,7 +55,7 @@ def parse_pic_v3(
 ) -> PILImage:
     """Convert .pic file to .png"""
 
-    pal = palette if palette is not None else tr2pal()
+    pal = palette
     def_pal = True
 
     while f:
@@ -83,6 +83,10 @@ def parse_pic_v3(
         elif header_str in ("C0", "E0"):
             raise ValueError(f"header {header_str} not implemented")
 
+    if pal is None:
+        raise ValueError(
+            "ERROR: No palette available. Not found in .pic and not specified as args"
+        )
     # make png from palette and pic data
     logging.info(f"pic: {fn}, def_pal: {def_pal}, w: {width}, h: {height}")
     # print(f"pic {pic[0:10].hex()}")
