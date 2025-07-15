@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from io import BufferedReader
+from io import BufferedReader, BytesIO
 from typing import Optional
 import argparse
 import logging
@@ -12,7 +12,16 @@ from PIL.Image import Image as PILImage
 
 import rle
 import lzw
-from pic_headers import PicV3BlockHeader, PicV3Image, PicV3Palette
+from pic_headers import (
+    PicV3BlockHeader,
+    PicV3Image,
+    PicV3Palette,
+    Pic98BlockHeader,
+    pic98_header_format,
+    Pic98PlaneBlock,
+    pic98_plane_block_format,
+)
+from bellard_lzss4 import lzss_decompress
 from shared import tr2pal
 
 
@@ -24,6 +33,12 @@ def main():
     )
     parser.add_argument(
         "-p", "--palette", help="The palette file to use.", default=None
+    )
+    parser.add_argument(
+        "--pic-version",
+        choices=["3", "98"],
+        default="3",
+        help="The version of the PIC file (3 or 98). Defaults to 3.",
     )
     args = parser.parse_args()
 
@@ -39,8 +54,15 @@ def main():
 
     # open file as binary
     with open(filename, "rb") as f:
-        # parse pic format
-        image = parse_pic_v3(f, os.path.basename(filename), pal)
+        # parse pic format based on version
+        if args.pic_version == "3":
+            image = parse_pic_v3(f, os.path.basename(filename), pal)
+        elif args.pic_version == "98":
+            image = parse_pic98(f, os.path.basename(filename), pal)
+        else:
+            # This case should not be reached due to 'choices' in add_argument
+            raise ValueError(f"Unsupported PIC version: {args.pic_version}")
+
         out = f"{os.path.basename(filename)}.png"
         logging.debug(f"saving to {out}")
         image.save(out)
@@ -109,7 +131,7 @@ def parse_pic_v3(
 # format or linear pixel format. Positive indicates pixels are packed two per
 # byte (4bit packed), while a negative value indicates a linear arrangement
 # (8bits per pixel). The pixel packing arrangement is discussed in the
-# “Compression” section below.
+# "Compression" section below.
 # (In subsequent versions of PIC the format identifier is always positive,
 # and does not indicate the pixel packing arrangement, only the maximum
 # LZW code width) The most common identifier values we have seen are:
@@ -118,7 +140,7 @@ def parse_image(f, length: int) -> tuple[bytes, int, int]:
     header = PicV3Image._make(struct.unpack("<HHB", f.read(5)))
     logging.debug(f"Image header: {header}")
     # data = f.read(length - 5)
-    # sometimes length is an overflowed value (see 0028.pic)
+    # sometimes length is an overflowed value (see 0028.pic in Shandalar)
     # in all the mtg picv3 files, the last block is the image data
     # so we read until the end of the file
     data = f.read(-1)
@@ -171,6 +193,48 @@ def parse_palette(f: BufferedReader) -> bytes:
     # Create a bytes object by packing each tuple
     byte_data = b"".join(struct.pack(format_string, *t) for t in palette)
     return byte_data
+
+
+# see https://canadianavenger.io/2024/09/17/pic-as-we-know-it/
+# and https://canadianavenger.io/2024/06/26/oops-i-did-it-again/
+def parse_pic98(
+    f: BufferedReader, fn: str, palette: Optional[bytes] = None
+) -> PILImage:
+    header = Pic98BlockHeader._make(struct.unpack(pic98_header_format, f.read(56)))
+
+    if header.sig != b"\x00H8\x00":
+        raise ValueError(f"Invalid pic98 file: {header.sig}")
+    logging.info(f"Image header: {header}")
+    logging.info(f"Width: {header.width}, Height: {header.height}")
+
+    data = bytearray()
+
+    for i in range(4):
+        # read 4 blocks of data
+        block = Pic98PlaneBlock._make(
+            struct.unpack(pic98_plane_block_format, f.read(2))
+        )
+        logging.info(f"Block {i}: len: {block.length}: curr: {f.tell()}")
+        data += lzss_decompress(BytesIO(f.read(block.length)))
+        logging.info(
+            f"Block {i}: len: {block.length}: curr: {f.tell()} date: {len(data)}"
+        )
+
+        # align on 16 bit boundary
+        logging.info(f.tell() % 2)
+        f.read(f.tell() % 2)
+
+    pal = parse_palette(BytesIO(header.pal))
+
+    expected = header.width * header.height
+    # if len(data) != expected:
+    #     raise ValueError(f"Size is: {len(data)} but should be {expected}")
+
+    image = Image.frombytes("P", (header.width // 2, header.height // 2), data)
+    image.putpalette(pal)
+    image.info["transparency"] = 255
+
+    return image
 
 
 if __name__ == "__main__":
