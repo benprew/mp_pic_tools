@@ -1,8 +1,8 @@
 ```
    __  _______________  ____  ___  ___  ____  ________
   /  |/  /  _/ ___/ _ \/ __ \/ _ \/ _ \/ __ \/ __/ __/
- / /|_/ // // /__/ , _/ /_/ / ___/ , _/ /_/ /\ \/ _/  
-/_/  /_/___/\___/_/|_|\____/_/  /_/|_|\____/___/___/  
+ / /|_/ // // /__/ , _/ /_/ / ___/ , _/ /_/ /\ \/ _/
+/_/  /_/___/\___/_/|_|\____/_/  /_/|_|\____/___/___/
  ⣀⡀ ⠄ ⢀⣀    ⣰⡀ ⢀⡀ ⢀⡀ ⡇ ⢀⣀
  ⡧⠜ ⠇ ⠣⠤ ⠤⠤ ⠘⠤ ⠣⠜ ⠣⠜ ⠣ ⠭⠕
 
@@ -30,9 +30,31 @@ If you want to replace an existing .pic image with one of your choice, here's th
 In this example, we have city.jpeg a .jpeg file and we want to replace the default screen that's shown when you walk into a city (City.pic). Todpal.tr is the palette file, in the Shandalar directory.
 
     jpg2png.py city.jpeg
-    png2pic.py city.png -p Todpal.tr 
+    png2pic.py city.png -p Todpal.tr
     mv city.png.pic City.pic
 
+## Games Supported
+
+### pic2png.py
+
+**Version 3**
+
+- Darklands,
+- F14 Fleet Defender,
+- F-15 Strike Eagle III,
+- Hyperspeed,
+- Knights of the Sky,
+- Lightspeed,
+- Magic: The Gathering Shandalar,
+- Sid Meier’s Civilization
+
+**Version 98**
+
+- Sid Meier’s Civilization (PC-98),
+- Sid Meier’s Railroad Tycoon (PC-98),
+- Sid Meier’s Railroad Tycoon Deluxe
+
+**Details: https://canadianavenger.io/2024/09/17/pic-as-we-know-it/**
 
 
 ## Scripts Overview
@@ -146,4 +168,3 @@ python png2spr.py image1.png image2.png -o output.spr -v
 - Joel "Quadko" McIntyre's [PicFileFormat.txt](https://www.joelmcintyre.com/PicFileFormat.txt)
 - Ciroth Ungol's [PicViewer Tools](https://www.slightlymagic.net/forum/viewtopic.php?f=25&t=7509)
 - Celestial Amber's [SprDecoder](https://github.com/CelestialAmber/ShandalarImageToolbox/blob/master/ShandalarImageToolbox/File%20Format%20Helpers/SprDecoder.cs)
-

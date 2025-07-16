@@ -30,3 +30,26 @@ def pal2tpal(pal: bytes) -> list[tuple[int, int, int]]:
 
 def pal_to_bytes(pal: list[tuple[int, int, int]]) -> bytes:
     return b"".join([struct.pack("<BBB", p) for p in pal])
+
+
+def pic_version_help_message():
+    return """
+    The version of the PIC file (3 or 98). Defaults to 3.
+
+    ### Version 3 -
+    Darklands,
+    F14 Fleet Defender,
+    F-15 Strike Eagle III,
+    Hyperspeed,
+    Knights of the Sky,
+    Lightspeed,
+    Magic: The Gathering Shandalar,
+    Sid Meier’s Civilization
+
+    ### Version 98 -
+    Sid Meier’s Civilization (PC-98),
+    Sid Meier’s Railroad Tycoon (PC-98),
+    Sid Meier’s Railroad Tycoon Deluxe
+
+    ### Details: https://canadianavenger.io/2024/09/17/pic-as-we-know-it/
+    """

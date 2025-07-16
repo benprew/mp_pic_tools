@@ -22,7 +22,7 @@ from pic_headers import (
     pic98_plane_block_format,
 )
 from bellard_lzss4 import lzss_decompress
-from shared import tr2pal
+from shared import tr2pal, pic_version_help_message
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
         "--pic-version",
         choices=["3", "98"],
         default="3",
-        help="The version of the PIC file (3 or 98). Defaults to 3.",
+        help=pic_version_help_message(),
     )
     args = parser.parse_args()
 
