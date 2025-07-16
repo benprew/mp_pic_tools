@@ -207,7 +207,8 @@ def parse_pic98(
     logging.info(f"Image header: {header}")
     logging.info(f"Width: {header.width}, Height: {header.height}")
 
-    data = bytearray()
+    # Pic98 files have 4 "planes" that are overlayed to form a single image
+    image_planes = []
 
     for i in range(4):
         # read 4 blocks of data
@@ -215,26 +216,78 @@ def parse_pic98(
             struct.unpack(pic98_plane_block_format, f.read(2))
         )
         logging.info(f"Block {i}: len: {block.length}: curr: {f.tell()}")
-        data += lzss_decompress(BytesIO(f.read(block.length)))
+        image_planes.append(lzss_decompress(BytesIO(f.read(block.length))))
         logging.info(
-            f"Block {i}: len: {block.length}: curr: {f.tell()} date: {len(data)}"
+            f"Block {i}: len: {block.length}: curr: {f.tell()} date: {len(block)}"
         )
 
         # align on 16 bit boundary
         logging.info(f.tell() % 2)
         f.read(f.tell() % 2)
 
-    pal = parse_palette(BytesIO(header.pal))
+    pixels = combine_planes(header, image_planes)
+    palette = convert_rgb444_palette_to_rgb888_bytes(header.pal)
 
     expected = header.width * header.height
-    # if len(data) != expected:
-    #     raise ValueError(f"Size is: {len(data)} but should be {expected}")
+    if len(pixels) != expected:
+        raise ValueError(f"Size is: {len(pixels)} but should be {expected}")
 
-    image = Image.frombytes("P", (header.width // 2, header.height // 2), data)
-    image.putpalette(pal)
+    image = Image.frombytes("P", (header.width, header.height), pixels)
+    image.putpalette(palette)
     image.info["transparency"] = 255
 
     return image
+
+
+def combine_planes(hdr, planes):
+    fo = bytearray()
+
+    for y in range(hdr.height):
+        for x in range(hdr.width // 8):  # 8 pixels per byte
+            pos = (y * (hdr.width // 8)) + x
+            p0 = planes[0][pos]
+            p1 = planes[1][pos]
+            p2 = planes[2][pos]
+            p3 = planes[3][pos]
+
+            for b in range(8):
+                px = 0
+
+                px |= p0 & 0x80
+                px >>= 1
+                px |= p1 & 0x80
+                px >>= 1
+                px |= p2 & 0x80
+                px >>= 1
+                px |= p3 & 0x80
+                px >>= 4  # move final value to lower 4 bits
+
+                p0 = (p0 << 1) & 0xFF
+                p1 = (p1 << 1) & 0xFF
+                p2 = (p2 << 1) & 0xFF
+                p3 = (p3 << 1) & 0xFF
+
+                fo.append(px)
+    return fo
+
+
+def convert_rgb444_palette_to_rgb888_bytes(rgb444_bytes):
+    if len(rgb444_bytes) != 48:
+        raise ValueError(
+            "Expected 48 bytes for 16-color RGB444 palette (3 bytes per color)."
+        )
+
+    palette_bytes = bytearray()
+
+    for i in range(0, len(rgb444_bytes), 3):
+        r4 = rgb444_bytes[i]
+        g4 = rgb444_bytes[i + 1]
+        b4 = rgb444_bytes[i + 2]
+
+        # Convert 4-bit to 8-bit using * 17 (0–15 → 0–255)
+        palette_bytes.extend([r4 * 17, g4 * 17, b4 * 17])
+
+    return bytes(palette_bytes)
 
 
 if __name__ == "__main__":
