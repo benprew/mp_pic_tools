@@ -1,5 +1,13 @@
 import struct
 
+"""
+Pic98 files are compressed using Bellar's lzss algorithm. This is based off of the
+lzexe reproduction https://github.com/mywave82/unlzexe.
+
+See: https://canadianavenger.io/2024/06/26/oops-i-did-it-again/ for details of the
+format
+"""
+
 
 class BitStream:
     def __init__(self, file):
