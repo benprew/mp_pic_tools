@@ -23,14 +23,13 @@ You can install Pillow using pip:
 pip3 install --user pillow
 ```
 
-## Replacing a .pic image in Shandalar
+## Example: replacing a .pic image in Shandalar
 
 If you want to replace an existing .pic image with one of your choice, here's the steps.
 
 In this example, we have city.jpeg a .jpeg file and we want to replace the default screen that's shown when you walk into a city (City.pic). Todpal.tr is the palette file, in the Shandalar directory.
 
-    jpg2png.py city.jpeg
-    png2pic.py city.png -p Todpal.tr
+    png2pic.py city.jpeg -p Todpal.tr
     mv city.png.pic City.pic
 
 ## Games Supported
@@ -64,6 +63,8 @@ In this example, we have city.jpeg a .jpeg file and we want to replace the defau
 3. **spr2png.py**: Converts SPR files to PNG files.
 4. **png2spr.py**: Converts PNG files to SPR files.
 
+See -h for help
+
 ### 1. Converting PNG to PICv3
 
 **Script**: png2pic.py
@@ -80,6 +81,7 @@ python png2pic.py <png_file> [-p <palette_file>] [-v]
 - `<png_file>`: The PNG file you want to convert.
 - `-p <palette_file>`: (Optional) The palette file to use.
 - `-v`: (Optional) Enable verbose mode for more detailed output.
+- `--pic-version <ver>`: The version of the PIC file (3 or 98). Defaults to 3
 
 **Example**:
 
@@ -103,6 +105,7 @@ python pic2png.py <pic_file> [-p <palette_file>] [-v]
 - `<pic_file>`: The PIC file you want to convert.
 - `-p <palette_file>`: (Optional) The palette file to use.
 - `-v`: (Optional) Enable verbose mode for more detailed output.
+- `--pic-version <ver>`: The version of the PIC file (3 or 98). Defaults to 3
 
 **Example**:
 
