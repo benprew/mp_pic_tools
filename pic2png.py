@@ -50,7 +50,11 @@ def main():
     filename = args.file
     pal = None
     if args.palette:
-        pal = tr2pal(args.palette)
+        if args.palette.endswith(".pal"):
+            with open(args.palette, "rb") as f:
+                pal = f.read()
+        else:
+            pal = tr2pal(args.palette)
 
     # open file as binary
     with open(filename, "rb") as f:
