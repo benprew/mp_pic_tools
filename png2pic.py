@@ -43,7 +43,7 @@ def main():
     else:
         logging.basicConfig(level=logging.WARNING)
 
-    img, width, height, bytes_orig, pal = parse_image(args.file)
+    img, width, height, bytes_orig = parse_image(args.file)
     quantized_img = convert_image_to_palette(img, args.palette)
     bytes_quantized = quantized_img.tobytes()
 
@@ -79,20 +79,13 @@ def convert_image_to_palette(image: Image.Image, palette_filename: str) -> Image
     return rgb_image.quantize(palette=palette_image, dither=Image.FLOYDSTEINBERG)
 
 
-def parse_image(filename: str) -> tuple[Image.Image, int, int, bytes, list[tuple]]:
+def parse_image(filename: str) -> tuple[Image.Image, int, int, bytes]:
     """Parse an image file and return image data and metadata."""
     img = Image.open(filename)
     width, height = img.size
     bytes_data = img.tobytes()
     print("len bytes:", len(bytes_data))
-    pal = img.palette
-    if pal is None:
-        raise ValueError("Image does not have a palette")
-    pal_lst = pal.getdata()[1]  # get the palette data
-    rgb_palette = [
-        (pal_lst[i], pal_lst[i + 1], pal_lst[i + 2]) for i in range(0, len(pal_lst), 3)
-    ]
-    return img, width, height, bytes_data, rgb_palette
+    return img, width, height, bytes_data
 
 
 def make_picv3(width: int, height: int, bytes: bytes) -> bytearray:
