@@ -117,6 +117,8 @@ def parse_pic_v3(
     logging.info(f"pic: {fn}, def_pal: {def_pal}, w: {width}, h: {height}")
     # print(f"pic {pic[0:10].hex()}")
 
+    logging.info(f"Size: {len(pic)}")
+
     i = 0
     while i < len(pal):
         # print(f"pal {i // 3}: {pal[i:i+3].hex()}")

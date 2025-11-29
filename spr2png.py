@@ -24,6 +24,7 @@ def main():
     parser.add_argument(
         "-p", "--palette", help="The palette file to use.", default=None
     )
+    parser.add_argument("-o", "--output", help="Ouput filename", default=None)
     args = parser.parse_args()
 
     if args.verbose >= 2:
@@ -37,18 +38,20 @@ def main():
     if not args.palette:
         args.palette = "TodPal.tr"
 
+    out = args.output if args.output else f"{os.path.basename(filename)}.png"
+
     # open file as binary
     with open(filename, "rb") as f:
         # parse pic format
         # images = parse_spr(f, os.path.basename(filename), pal)
         image = parse_spr(f, filename, tr2pal(args.palette))
-        out = f"{os.path.basename(filename)}.png"
         logging.debug(f"saving to {out}")
         image.save(out)
 
 
-# SPR files aren't compressed or encoded, they're raw images
-# A given SPR file can contain multiple images,
+# SPR files aren't compressed or encoded, they're raw images, but have transparent
+# pixel length encoding.
+# An SPR file can contain multiple images, all of the same size
 def parse_spr(data_stream, filename: str, palette: bytes) -> PILImage:
     bitmaps: list[PILImage] = []
 
@@ -170,6 +173,8 @@ def parse_spr(data_stream, filename: str, palette: bytes) -> PILImage:
         modulo = 5
     elif "Moon" in filename:
         modulo = 8
+    # elif "Dungeon" in filename:
+    #     modulo = len(bitmaps)
     elif "Dungeon" in filename or "Worlds" in filename:
         modulo = 12
 

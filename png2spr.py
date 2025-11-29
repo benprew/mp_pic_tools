@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-import os
 import struct
 from typing import List
 
@@ -90,7 +89,7 @@ def make_spr(images: List[PILImage], output_stream) -> None:
             image_data.append(transparent_pixels)  # transparent pixels count
             # image_data.append(0xFF)
 
-            print(f"pixels_in_data: {pixels_in_data}")
+            logging.info(f"pixels_in_data: {pixels_in_data}")
             if pixels_in_data > 0xFF:
                 image_data.append(0xFE)  # extended pixel count marker
                 image_data.append(pixels_in_data & 0xFF)
@@ -112,14 +111,25 @@ def make_spr(images: List[PILImage], output_stream) -> None:
             cutoff_offset_y,  # cutoff offset
         )
 
+        # calculate padding
+        curr = len(image_data) + len(header)
+        padding = (4 - (curr % 4)) % 4
+        print(
+            f"empty: {empty_lines} cutoff: {cutoff_offset_y} curr {curr} padding {padding}"
+        )
+
         # Write header at start of image data
         image_data[0:16] = header
 
         # Write the image data
         output_stream.write(image_data)
 
+        # TODO: Write padding
+
     # Write end marker
-    output_stream.write(struct.pack("<I", 0xFFFFFFFF))
+    output_stream.write(
+        b"\xFF\xFF\xFF\xFF\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+    )
 
 
 if __name__ == "__main__":
