@@ -2,7 +2,7 @@ import struct
 
 
 # Convert a .tr text palette to bytes
-def tr2pal(pal_file="TodPal.tr", default_color=(0, 0, 0)) -> bytes:
+def tr2pal(pal_file="TodPal.tr", default_color=(0, 255, 0)) -> bytes:
     """Parse .tr palette files into bytes"""
     pal = [default_color] * 256
 
@@ -15,8 +15,6 @@ def tr2pal(pal_file="TodPal.tr", default_color=(0, 0, 0)) -> bytes:
             pal_num = int(temp[0])
             rgb = temp[1:4]
             pal[pal_num] = [int(x) for x in rgb]
-
-    pal[254] = (255, 255, 255)  # Set the last color to black
 
     # Convert the list of lists to a bytes object
     byte_data = b"".join(struct.pack("<BBB", *pal[i]) for i in range(256))

@@ -35,6 +35,14 @@ def main():
         "-p", "--palette", help="The palette file to use.", default=None
     )
     parser.add_argument(
+        "--default-color",
+        type=int,
+        nargs=3,
+        default=[0, 0, 0],
+        metavar=("R", "G", "B"),
+        help="Default RGB color for undefined palette entries (default: 0 0 0).",
+    )
+    parser.add_argument(
         "--pic-version",
         choices=["3", "98"],
         default="3",
@@ -54,7 +62,7 @@ def main():
             with open(args.palette, "rb") as f:
                 pal = f.read()
         else:
-            pal = tr2pal(args.palette)
+            pal = tr2pal(args.palette, default_color=tuple(args.default_color))
 
     # open file as binary
     with open(filename, "rb") as f:
@@ -115,7 +123,7 @@ def parse_pic_v3(
         )
     # make png from palette and pic data
     logging.info(f"pic: {fn}, def_pal: {def_pal}, w: {width}, h: {height}")
-    # print(f"pic {pic[0:10].hex()}")
+    # print(f"pic: {fn}, def_pal: {def_pal}, w: {width}, h: {height}")
 
     i = 0
     while i < len(pal):
